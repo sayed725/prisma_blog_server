@@ -110,12 +110,22 @@ const getAllPost = async ({
       total,
       page,
       limit,
-      totalPages: Math.ceil(total/ limit)
+      totalPages: Math.ceil(total / limit),
     },
   };
+};
+
+const getPostById = async (postId: string) => {
+  const result = await prisma.post.findUnique({
+    where: {
+      id: postId,
+    },
+  });
+  return result;
 };
 
 export const postService = {
   createPost,
   getAllPost,
+  getPostById,
 };
