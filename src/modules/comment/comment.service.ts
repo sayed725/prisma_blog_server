@@ -62,8 +62,8 @@ const getCommentsByAuthor = async (authorId: string) => {
 };
 
 // 1. nijar comment delete korta parbe
-// login thakte hobe
-// tar nijar comment kina ata check korta hobe
+// 2. login thakte hobe
+// 3. tar nijar comment kina ata check korta hobe
 const deleteComment = async (commentId: string, authorId: string) => {
   const commentData = await prisma.comment.findFirst({
     where: {
