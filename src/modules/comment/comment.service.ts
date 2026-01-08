@@ -62,7 +62,7 @@ const getCommentsByAuthor = async (authorId: string) => {
 };
 
 // 1. should be logged in
-// 2. User can only delete his own comment
+// 2. User can only delete his own posted comment
 // 3. check if the existing comment belongs to the user or not
 const deleteComment = async (commentId: string, authorId: string) => {
   const commentData = await prisma.comment.findFirst({
