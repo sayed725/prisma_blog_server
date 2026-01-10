@@ -78,44 +78,73 @@ const deleteComment = async (commentId: string, authorId: string) => {
   if (!commentData) {
     throw new Error("Your provided input is invalid!");
   }
-  
-   return await prisma.comment.delete({
-        where: {
-            id: commentData.id
-        }
-    })
 
+  return await prisma.comment.delete({
+    where: {
+      id: commentData.id,
+    },
+  });
 };
 
 // authorId, commentId, updatedData
-const updateComment = async (commentId: string, data: { content?: string, status?: CommentStatus }, authorId: string) => {
-     const commentData = await prisma.comment.findFirst({
-        where: {
-            id: commentId,
-            authorId
-        },
-        select: {
-            id: true
-        }
-    })
+const updateComment = async (
+  commentId: string,
+  data: { content?: string; status?: CommentStatus },
+  authorId: string
+) => {
+  const commentData = await prisma.comment.findFirst({
+    where: {
+      id: commentId,
+      authorId,
+    },
+    select: {
+      id: true,
+    },
+  });
 
-    if (!commentData) {
-        throw new Error("Your provided input is invalid!")
-    }
+  if (!commentData) {
+    throw new Error("Your provided input is invalid!");
+  }
 
-    return await prisma.comment.update({
-        where: {
-            id: commentId,
-            authorId
-        },
-        data
-    })
-}
+  return await prisma.comment.update({
+    where: {
+      id: commentId,
+      authorId,
+    },
+    data,
+  });
+};
+
+const moderateComment = async (id: string, data: { status: CommentStatus }) => {
+  const commentData = await prisma.comment.findUniqueOrThrow({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (commentData.status === data.status) {
+    throw new Error(
+      `Your provided status (${data.status}) is already up to date.`
+    );
+  }
+
+  return await prisma.comment.update({
+    where: {
+      id,
+    },
+    data,
+  });
+};
 
 export const commentService = {
   createComment,
   getCommentById,
   getCommentsByAuthor,
   deleteComment,
-  updateComment
+  updateComment,
+  moderateComment,
 };
