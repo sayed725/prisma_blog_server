@@ -101,10 +101,10 @@ const getAllPost = async ({
     },
     orderBy: { [sortBy]: sortOrder },
     include: {
-        _count: {
-            select: {comments: true}
-        }
-    }
+      _count: {
+        select: { comments: true },
+      },
+    },
   });
 
   const total = await prisma.post.count({
@@ -146,87 +146,118 @@ const getPostById = async (postId: string) => {
             parentId: null,
             status: CommentStatus.APPROVED,
           },
-          orderBy: {createdAt: "desc"},
+          orderBy: { createdAt: "desc" },
           include: {
             comments: {
               where: {
                 status: CommentStatus.APPROVED,
               },
-              orderBy: {createdAt: "asc"},
+              orderBy: { createdAt: "asc" },
               include: {
                 comments: {
                   where: {
                     status: CommentStatus.APPROVED,
                   },
-                  orderBy: {createdAt: "asc"}
+                  orderBy: { createdAt: "asc" },
                 },
-
               },
             },
           },
         },
 
         _count: {
-            select: {comments: true}
-        }
+          select: { comments: true },
+        },
       },
     });
     return postData;
   });
 };
 
+const getMyPosts = async (authorId: string) => {
+  await prisma.user.findUniqueOrThrow({
+    where: {
+      id: authorId,
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+    },
+  });
 
-const getMyPosts = async(authorId: string) =>{
-
-    await prisma.user.findUniqueOrThrow({
-        where: {
-            id: authorId,
-            status: "ACTIVE"
-        },
+  const result = await prisma.post.findMany({
+    where: {
+      authorId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      _count: {
         select: {
-            id: true
-        }
-    })
-
-
-    const result = await prisma.post.findMany({
-        where: {
-            authorId
+          comments: true,
         },
-        orderBy : {
-            createdAt: "desc"
-        },
-        include: {
-            _count: {
-                select: {
-                    comments: true
-                }
-            }
-        }
-    });
+      },
+    },
+  });
+
+  // const total = await prisma.post.aggregate({
+  //     _count: {
+  //         id: true
+  //     },
+  //     where: {
+  //         authorId
+  //     }
+  // })
+
+  return result;
+};
 
 
-    // const total = await prisma.post.aggregate({
-    //     _count: {
-    //         id: true
-    //     },
-    //     where: {
-    //         authorId
-    //     }
-    // })
+//**
+// user - sudhu nijar post update korta parbe, isFeatured update korta parbe na
+// admin - sobar post update korta parbe.
+// */
 
-    return result
-}
+const updatePost = async (
+  postId: string,
+  data: Partial<Post>,
+  authorId: string,
+  isAdmin: boolean
+) => {
+  const postData = await prisma.post.findUniqueOrThrow({
+    where: {
+      id: postId,
+    },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  });
 
+  if (!isAdmin && postData.authorId !== authorId) {
+    throw new Error("You are not the owner/creator of the post!");
+  }
 
-const updatePost = async(postId: string, data: Partial<Post>, authorId: string, isAdmin: boolean ) => {
+  const result = await prisma.post.update({
+    where: {
+      id: postData.id,
+    },
+    data,
+  });
 
-}
+  return result;
+};
+
+//** 
+// 1. user - nijar created post delete korta parbe
+// 2. admin - sobar post delete korta parbe
+// */
 
 export const postService = {
   createPost,
   getAllPost,
   getPostById,
   getMyPosts,
-  updatePost
+  updatePost,
 };
